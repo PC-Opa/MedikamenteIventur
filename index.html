@@ -5,21 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Medikamenten-Inventar</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f6f8fa; color: #24292f; }
-        h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; }
-        .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
+        h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
+        .card { background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         label { font-weight: bold; display: block; margin-bottom: 8px; }
-        input[type="date"] { padding: 8px; font-size: 16px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; max-width: 200px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 6px; overflow: hidden; }
+        input[type="date"] { padding: 10px; font-size: 16px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; box-sizing: border-box; max-width: 250px; }
+        
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; min-width: 800px; }
         th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
-        .input-stock { width: 60px; padding: 6px; font-size: 14px; border: 1px solid #d0d7de; border-radius: 4px; text-align: center; }
-        .btn { background-color: #0969da; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; display: inline-block; }
-        .btn:hover { background-color: #0c57d0; }
-        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
-        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
-        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        
+        .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
+        
+        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -27,14 +29,11 @@
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
     <div class="card">
-        <label for="target-date">📅 1. Wähle ein Wunschdatum in der Zukunft:</label>
-        <input type="date" id="target-date">
-        <br><br>
-        <button class="btn" onclick="calculateInventory()">🔄 Restzeit & Bestände berechnen</button>
+        <label for="target-date">📅 Wunschdatum in der Zukunft wählen:</label>
+        <input type="date" id="target-date" onchange="calculateInventory()">
     </div>
 
-    <div class="card" style="overflow-x: auto;">
-        <label>💊 2. Aktuelle Bestände anpassen & Übersicht ablesen:</label>
+    <div class="card table-container">
         <table>
             <thead>
                 <tr>
@@ -48,14 +47,11 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="med-table-body">
-                <!-- Wird dynamisch per JavaScript befüllt -->
-            </tbody>
+            <tbody id="med-table-body"></tbody>
         </table>
     </div>
 
     <script>
-        // Feste Medikamenten-Stammdaten und Dosierungen
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "100 Stk.", initStock: 100, bedarf: 2 },
@@ -75,9 +71,7 @@
             
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
-                if (savedStock !== null) {
-                    med.initStock = parseInt(savedStock);
-                }
+                if (savedStock !== null) med.initStock = parseInt(savedStock);
             });
             
             buildTable();
@@ -86,18 +80,16 @@
         function buildTable() {
             const tbody = document.getElementById('med-table-body');
             tbody.innerHTML = "";
-            
             medData.forEach(med => {
                 let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
-                
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${med.name}</strong></td>
                         <td><small>${med.pzn}</small></td>
-                        <td><small>${med.packung}</small></td>
-                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" onchange="saveStock('${med.id}', this.value)"></td>
+                        <td><strong>${med.packung}</strong></td>
+                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" onchange="updateStock('${med.id}', this.value)"></td>
                         <td><small>${bedarfText}</small></td>
-                        <td id="future-stock-${med.id}">-</td>
+                        <td id="future-${med.id}">-</td>
                         <td id="reach-${med.id}">-</td>
                         <td id="status-${med.id}">-</td>
                     </tr>
@@ -106,10 +98,11 @@
             calculateInventory();
         }
 
-        function saveStock(id, value) {
-            localStorage.setItem('stock_' + id, value);
+        function updateStock(id, value) {
+            let num = parseInt(value) || 0;
+            localStorage.setItem('stock_' + id, num);
             const med = medData.find(m => m.id === id);
-            if (med) med.initStock = parseInt(value) || 0;
+            if (med) med.initStock = num;
             calculateInventory();
         }
 
@@ -128,8 +121,6 @@
             medData.forEach(med => {
                 let verbrauch = diffTage * med.bedarf;
                 let zukunftsBestand = med.initStock - verbrauch;
-                
-                let restTageAbZiel = 0;
                 let reichweiteText = "";
                 let statusHtml = "";
 
@@ -139,28 +130,20 @@
                     let restWochen = Math.floor(zukunftsBestand);
                     reichweiteText = `${restWochen} Wochen`;
                     
-                    if (zukunftsBestand <= 0) {
-                        statusHtml = '<span class="status-red">🔴 LEER! Vorher bestellen</span>';
-                    } else if (zukunftsBestand < 2) {
-                        statusHtml = '<span class="status-yellow">🟡 Wird knapp</span>';
-                    } else {
-                        statusHtml = '<span class="status-green">🟢 Sicher</span>';
-                    }
+                    if (zukunftsBestand <= 0) statusHtml = '<span class="status-red">🔴 LEER!</span>';
+                    else if (zukunftsBestand < 2) statusHtml = '<span class="status-yellow">🟡 Knapp</span>';
+                    else statusHtml = '<span class="status-green">🟢 Sicher</span>';
                 } else {
                     zukunftsBestand = Math.max(0, Math.floor(zukunftsBestand));
-                    restTageAbZiel = Math.floor(zukunftsBestand / med.bedarf);
+                    let restTageAbZiel = Math.floor(zukunftsBestand / med.bedarf);
                     reichweiteText = `${restTageAbZiel} Tage`;
                     
-                    if (zukunftsBestand <= 0) {
-                        statusHtml = '<span class="status-red">🔴 LEER! Vorher bestellen</span>';
-                    } else if (restTageAbZiel < 14) {
-                        statusHtml = '<span class="status-yellow">🟡 Wird knapp</span>';
-                    } else {
-                        statusHtml = '<span class="status-green">🟢 Sicher</span>';
-                    }
+                    if (zukunftsBestand <= 0) statusHtml = '<span class="status-red">🔴 LEER!</span>';
+                    else if (restTageAbZiel < 14) statusHtml = '<span class="status-yellow">🟡 Knapp</span>';
+                    else statusHtml = '<span class="status-green">🟢 Sicher</span>';
                 }
 
-                document.getElementById(`future-stock-${med.id}`).innerText = zukunftsBestand;
+                document.getElementById(`future-${med.id}`).innerText = zukunftsBestand;
                 document.getElementById(`reach-${med.id}`).innerHTML = `<strong>${reichweiteText}</strong>`;
                 document.getElementById(`status-${med.id}`).innerHTML = statusHtml;
             });
