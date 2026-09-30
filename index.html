@@ -14,13 +14,11 @@
         h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
         .card { background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; min-width: 800px; }
+        #content-area { font-size: 16px; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
-        #content-area { font-size: 16px; line-height: 1.5; }
-        /* Versteckt GitHub-Sonderzeichen */
-        h2, h3 { margin-top: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -28,28 +26,21 @@
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
     <div class="card table-container">
-        <div id="content-area">🔄 Lade aktuelle Synchrodaten von GitHub...</div>
+        <div id="content-area">🔄 Synchronisiere Daten mit Laptop...</div>
     </div>
 
     <script>
-        // Holt die tagesaktuelle Tabelle, die der Laptop berechnet hat, direkt aus der README.md
         window.onload = function() {
             fetch('README.md')
                 .then(response => response.text())
                 .then(text => {
-                    // Wandelt den Text in lesbares HTML für das Handy um
-                    let html = text.replace(/\|/g, ' '); // Bereinigt Tabellenstriche
-                    
-                    // Einfache Tabellen-Darstellung aus der README extrahieren
-                    document.getElementById('content-area').innerHTML = marked(text);
+                    document.getElementById('content-area').innerHTML = marked.parse(text);
                 })
                 .catch(err => {
-                    // Falls die README direkt geladen wird (Ausfallschutz)
                     document.getElementById('content-area').innerHTML = "<p>Fehler beim Laden. Bitte Seite neu laden.</p>";
                 });
         };
     </script>
-    <!-- Hilfsprogramm um die GitHub-Tabelle schön anzuzeigen -->
     <script src="https://jsdelivr.net"></script>
 </body>
 </html>
