@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Medikamenten-Inventar</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f6f8fa; color: #24292f; }
+        h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; }
+        .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        label { font-weight: bold; display: block; margin-bottom: 8px; }
+        input[type="date"] { padding: 8px; font-size: 16px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; max-width: 200px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 6px; overflow: hidden; }
+        th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
+        th { background-color: #f6f8fa; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9fafb; }
+        .input-stock { width: 60px; padding: 6px; font-size: 14px; border: 1px solid #d0d7de; border-radius: 4px; text-align: center; }
+        .btn { background-color: #0969da; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; display: inline-block; }
+        .btn:hover { background-color: #0c57d0; }
+        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <h1>📋 Mein Medikamenten-Inventar</h1>
+
+    <div class="card">
+        <label for="target-date">📅 1. Wähle ein Wunschdatum in der Zukunft:</label>
+        <input type="date" id="target-date">
+        <br><br>
+        <button class="btn" onclick="calculateInventory()">🔄 Restzeit & Bestände berechnen</button>
+    </div>
+
+    <div class="card" style="overflow-x: auto;">
+        <label>💊 2. Aktuelle Bestände anpassen & Übersicht ablesen:</label>
+        <table>
+            <thead>
+                <tr>
+                    <th>Medikament</th>
+                    <th>PZN</th>
+                    <th>Bestand heute</th>
+                    <th>Bedarf / Tag</th>
+                    <th>Bestand am Wunschdatum</th>
+                    <th>Reicht ab da noch...</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="med-table-body">
+                <!-- Wird dynamisch per JavaScript befüllt -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Feste Medikamenten-Stammdaten und Dosierungen
+        const medData = [
+            { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", initStock: 100, bedarf: 3, unit: "Tabletten" },
+            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", initStock: 100, bedarf: 2, unit: "Tabletten" },
+            { id: "ozempic", name: "Ozempic 2mg (Mittwoch)", pzn: "01016397", initStock: 12, bedarf: 1/7, unit: "Wochen" },
+            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", initStock: 90, bedarf: 1, unit: "Tabletten" },
+            { id: "omeprazol", name: "Omeprazol 40 mg", pzn: "10517106", initStock: 100, bedarf: 1, unit: "Tabletten" },
+            { id: "metohexal", name: "MetoHexal 50 mg", pzn: "02559964", initStock: 100, bedarf: 1, unit: "Tabletten" },
+            { id: "metoprolol", name: "MetoProlol A-Z", pzn: "01983619", initStock: 100, bedarf: 1, unit: "Tabletten" },
+            { id: "ultibro", name: "Ultibro 85ug/43ug", pzn: "03852962", initStock: 100, bedarf: 1, unit: "Inhalationen" },
+            { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", initStock: 180, bedarf: 1, unit: "Tabletten" }
+        ];
+
+        // Beim Laden der Seite: Setze das Zukunftsdatum standardmäßig auf morgen und lade gespeicherte Bestände
+        window.onload = function() {
+            const morgen = new Date();
+            morgen.setDate(morgen.getDate() + 1);
+            document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
+            
+            // Lokalen Speicher (LocalStorage) prüfen, damit geänderte Zahlen auf dem Handy gespeichert bleiben
+            medData.forEach(med => {
+                const savedStock = localStorage.getItem('stock_' + med.id);
+                if (savedStock !== null) {
+                    med.initStock = parseInt(savedStock);
+                }
+            });
+            
+            buildTable();
+        };
+
+        function buildTable() {
+            const tbody = document.getElementById('med-table-body');
+            tbody.innerHTML = "";
+            
+            medData.forEach(med => {
+                let bedarfText = med.bedarf === 1/7 ? "1x pro Woche" : `${med.bedarf} / Tag`;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${med.name}</strong></td>
+                        <td><small>${med.pzn}</small></td>
+                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" onchange="saveStock('${med.id}', this.value)"></td>
+                        <td><small>${bedarfText}</small></td>
+                        <td id="future-stock-${med.id}">-</td>
+                        <td id="reach-${med.id}">-</td>
+                        <td id="status-${med.id}">-</td>
+                    </tr>
+                `;
+            });
+            calculateInventory();
+        }
+
+        function saveStock(id, value) {
+            localStorage.setItem('stock_' + id, value);
+            const med = medData.find(m => m.id === id);
+            if (med) med.initStock = parseInt(value) || 0;
+            calculateInventory();
+        }
+
+        function calculateInventory() {
+            const heute = new Date();
+            heute.setHours(0,0,0,0);
+            
+            const zielInput = document.getElementById('target-date').value;
+            if (!zielInput) return;
+            const zielDatum = new Date(zielInput);
+            zielDatum.setHours(0,0,0,0);
+            
+            const diffZeit = zielDatum - heute;
+            const diffTage = Math.max(0, Math.ceil(diffZeit / (1000 * 60 * 60 * 24)));
+
+            medData.forEach(med => {
+                let verbrauch = diffTage * med.bedarf;
+                let zukunftsBestand = med.initStock - verbrauch;
+                
+                let restTageAbZiel = 0;
+                let reichweiteText = "";
+                let statusHtml = "";
+
+                if (med.id === "ozempic") {
+                    let verbrauchteWochen = diffTage / 7;
+                    zukunftsBestand = Math.max(0, Math.round((med.initStock - verbrauchteWochen) * 10) / 10);
+                    let restWochen = Math.floor(zukunftsBestand);
+                    reichweiteText = `${restWochen} Wochen`;
+                    
+                    if (zukunftsBestand <= 0) {
+                        statusHtml = '<span class="status-red">🔴 LEER! Vorher bestellen</span>';
+                    } else if (zukunftsBestand < 2) {
+                        statusHtml = '<span class="status-yellow">🟡 Wird knapp</span>';
+                    } else {
+                        statusHtml = '<span class="status-green">🟢 Sicher</span>';
+                    }
+                } else {
+                    zukunftsBestand = Math.max(0, Math.floor(zukunftsBestand));
+                    restTageAbZiel = Math.floor(zukunftsBestand / med.bedarf);
+                    reichweiteText = `${restTageAbZiel} Tage`;
+                    
+                    if (zukunftsBestand <= 0) {
+                        statusHtml = '<span class="status-red">🔴 LEER! Vorher bestellen</span>';
+                    } else if (restTageAbZiel < 14) {
+                        statusHtml = '<span class="status-yellow">🟡 Wird knapp</span>';
+                    } else {
+                        statusHtml = '<span class="status-green">🟢 Sicher</span>';
+                    }
+                }
+
+                document.getElementById(`future-stock-${med.id}`).innerText = zukunftsBestand;
+                document.getElementById(`reach-${med.id}`).innerHTML = `<strong>${reichweiteText}</strong>`;
+                document.getElementById(`status-${med.id}`).innerHTML = statusHtml;
+            });
+        }
+    </script>
+</body>
+</html>
