@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Medikamenten-Inventar</title>
-        <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/png" href="ApoIcon.png">
     <link rel="apple-touch-icon" href="ApoIcon.png">
     <link rel="icon" sizes="192x192" href="ApoIcon.png">
     <link rel="shortcut icon" href="ApoIcon.png">
-     <style>
+    <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
         h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
         .card { background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -59,9 +59,9 @@
     <script>
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
-            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
+            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "100 Stk.", initStock: 100, bedarf: 2 },
             { id: "ozempic", name: "Ozempic 2mg (Mittwoch)", pzn: "01016397", packung: "12 Dosen", initStock: 12, bedarf: 1/7 },
-            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", packung: "100 Stk.", initStock: 90, bedarf: 1 },
+            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", packung: "90 Stk.", initStock: 90, bedarf: 1 },
             { id: "omeprazol", name: "Omeprazol 40 mg", pzn: "10517106", packung: "100 Stk.", initStock: 100, bedarf: 1 },
             { id: "metohexal", name: "MetoHexal 50 mg", pzn: "02559964", packung: "100 Stk.", initStock: 100, bedarf: 1 },
             { id: "metoprolol", name: "MetoProlol A-Z", pzn: "01983619", packung: "100 Stk.", initStock: 100, bedarf: 1 },
@@ -109,7 +109,7 @@
         function updateStock(id, value) {
             let num = parseInt(value);
             if (isNaN(num) || num < 0) {
-                num = 0; // Setzt die Berechnung im Hintergrund auf 0, wenn das Feld leer ist
+                num = 0;
             }
             localStorage.setItem('stock_' + id, num);
             const med = medData.find(m => m.id === id);
@@ -118,7 +118,6 @@
         }
 
         function checkEmpty(id, value) {
-            // Sobald du das Feld verlässt und es komplett leer ist, wird auch optisch eine 0 eingetragen
             if (value.trim() === "") {
                 document.getElementById('input-' + id).value = 0;
                 updateStock(id, 0);
