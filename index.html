@@ -13,159 +13,43 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
         h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
         .card { background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        label { font-weight: bold; display: block; margin-bottom: 8px; }
-        input[type="date"] { padding: 10px; font-size: 16px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; box-sizing: border-box; max-width: 250px; }
-        
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; min-width: 800px; }
         th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
-        
-        .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
-        
-        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
-        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
-        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        #content-area { font-size: 16px; line-height: 1.5; }
+        /* Versteckt GitHub-Sonderzeichen */
+        h2, h3 { margin-top: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
-    <div class="card">
-        <label for="target-date">📅 Wunschdatum in der Zukunft wählen:</label>
-        <input type="date" id="target-date" onchange="calculateInventory()">
-    </div>
-
     <div class="card table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Medikament</th>
-                    <th>PZN</th>
-                    <th>Inhalt (Packung)</th>
-                    <th>Aktueller Restbestand</th>
-                    <th>Bedarf</th>
-                    <th>Bestand am Wunschdatum</th>
-                    <th>Reicht ab da noch...</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="med-table-body"></tbody>
-        </table>
+        <div id="content-area">🔄 Lade aktuelle Synchrodaten von GitHub...</div>
     </div>
 
     <script>
-        const medData = [
-            { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
-            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "100 Stk.", initStock: 100, bedarf: 2 },
-            { id: "ozempic", name: "Ozempic 2mg (Mittwoch)", pzn: "01016397", packung: "12 Dosen", initStock: 12, bedarf: 1/7 },
-            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", packung: "90 Stk.", initStock: 90, bedarf: 1 },
-            { id: "omeprazol", name: "Omeprazol 40 mg", pzn: "10517106", packung: "100 Stk.", initStock: 100, bedarf: 1 },
-            { id: "metohexal", name: "MetoHexal 50 mg", pzn: "02559964", packung: "100 Stk.", initStock: 100, bedarf: 1 },
-            { id: "metoprolol", name: "MetoProlol A-Z", pzn: "01983619", packung: "100 Stk.", initStock: 100, bedarf: 1 },
-            { id: "ultibro", name: "Ultibro 85ug/43ug", pzn: "03852962", packung: "100 Inh.", initStock: 100, bedarf: 1 },
-            { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", packung: "180 Stk.", initStock: 180, bedarf: 1 }
-        ];
-
+        // Holt die tagesaktuelle Tabelle, die der Laptop berechnet hat, direkt aus der README.md
         window.onload = function() {
-            const morgen = new Date();
-            morgen.setDate(morgen.getDate() + 1);
-            document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
-            
-            medData.forEach(med => {
-                const savedStock = localStorage.getItem('stock_' + med.id);
-                if (savedStock !== null) {
-                    med.initStock = parseInt(savedStock);
-                    if (isNaN(med.initStock)) med.initStock = 0;
-                }
-            });
-            
-            buildTable();
+            fetch('README.md')
+                .then(response => response.text())
+                .then(text => {
+                    // Wandelt den Text in lesbares HTML für das Handy um
+                    let html = text.replace(/\|/g, ' '); // Bereinigt Tabellenstriche
+                    
+                    // Einfache Tabellen-Darstellung aus der README extrahieren
+                    document.getElementById('content-area').innerHTML = marked(text);
+                })
+                .catch(err => {
+                    // Falls die README direkt geladen wird (Ausfallschutz)
+                    document.getElementById('content-area').innerHTML = "<p>Fehler beim Laden. Bitte Seite neu laden.</p>";
+                });
         };
-
-        function buildTable() {
-            const tbody = document.getElementById('med-table-body');
-            tbody.innerHTML = "";
-            medData.forEach(med => {
-                let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${med.name}</strong></td>
-                        <td><small>${med.pzn}</small></td>
-                        <td><strong>${med.packung}</strong></td>
-                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" min="0" oninput="updateStock('${med.id}', this.value)" onblur="checkEmpty('${med.id}', this.value)"></td>
-                        <td><small>${bedarfText}</small></td>
-                        <td id="future-${med.id}">-</td>
-                        <td id="reach-${med.id}">-</td>
-                        <td id="status-${med.id}">-</td>
-                    </tr>
-                `;
-            });
-            calculateInventory();
-        }
-
-        function updateStock(id, value) {
-            let num = parseInt(value);
-            if (isNaN(num) || num < 0) {
-                num = 0;
-            }
-            localStorage.setItem('stock_' + id, num);
-            const med = medData.find(m => m.id === id);
-            if (med) med.initStock = num;
-            calculateInventory();
-        }
-
-        function checkEmpty(id, value) {
-            if (value.trim() === "") {
-                document.getElementById('input-' + id).value = 0;
-                updateStock(id, 0);
-            }
-        }
-
-        function calculateInventory() {
-            const heute = new Date();
-            heute.setHours(0,0,0,0);
-            
-            const zielInput = document.getElementById('target-date').value;
-            if (!zielInput) return;
-            const zielDatum = new Date(zielInput);
-            zielDatum.setHours(0,0,0,0);
-            
-            const diffZeit = zielDatum - heute;
-            const diffTage = Math.max(0, Math.ceil(diffZeit / (1000 * 60 * 60 * 24)));
-
-            medData.forEach(med => {
-                let verbrauch = diffTage * med.bedarf;
-                let zukunftsBestand = med.initStock - verbrauch;
-                let reichweiteText = "";
-                let statusHtml = "";
-
-                if (med.id === "ozempic") {
-                    let verbrauchteWochen = diffTage / 7;
-                    zukunftsBestand = Math.max(0, Math.round((med.initStock - verbrauchteWochen) * 10) / 10);
-                    let restWochen = Math.floor(zukunftsBestand);
-                    reichweiteText = `${restWochen} Wochen`;
-                    
-                    if (zukunftsBestand <= 0) statusHtml = '<span class="status-red">🔴 LEER!</span>';
-                    else if (zukunftsBestand < 2) statusHtml = '<span class="status-yellow">🟡 Knapp</span>';
-                    else statusHtml = '<span class="status-green">🟢 Sicher</span>';
-                } else {
-                    zukunftsBestand = Math.max(0, Math.floor(zukunftsBestand));
-                    let restTageAbZiel = Math.floor(zukunftsBestand / med.bedarf);
-                    reichweiteText = `${restTageAbZiel} Tage`;
-                    
-                    if (zukunftsBestand <= 0) statusHtml = '<span class="status-red">🔴 LEER!</span>';
-                    else if (restTageAbZiel < 14) statusHtml = '<span class="status-yellow">🟡 Knapp</span>';
-                    else statusHtml = '<span class="status-green">🟢 Sicher</span>';
-                }
-
-                document.getElementById(`future-${med.id}`).innerText = zukunftsBestand;
-                document.getElementById(`reach-${med.id}`).innerHTML = `<strong>${reichweiteText}</strong>`;
-                document.getElementById(`status-${med.id}`).innerHTML = statusHtml;
-            });
-        }
     </script>
+    <!-- Hilfsprogramm um die GitHub-Tabelle schön anzuzeigen -->
+    <script src="https://jsdelivr.net"></script>
 </body>
 </html>
