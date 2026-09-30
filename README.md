@@ -27,4 +27,4 @@ Diese Liste hilft mir, den Überblick über meine Medikamente zu behalten.
 1. Wenn ich eine neue Packung anbreche oder Tabletten zähle, schaue ich in die Spalte **"Aktueller Restbestand"**.
 2. Ich klicke auf **Bearbeiten** und ändere einfach die fettgedruckte Zahl (z.B. von `100` auf `50`).
 3. Ich passe kurz im Kopf die Spalte **"Reicht noch für..."** an (z.B. bei Metformin: 50 Tabletten im Schrank / 2 am Tag = 25 Tage).
-4. Datei speichern – fertig!
+4. Datei speichern – fertig! 
