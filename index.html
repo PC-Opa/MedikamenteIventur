@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Medikamenten-Inventar</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f6f8fa; color: #24292f; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f6f8fa; color: #24292f; }
         h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; }
         .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         label { font-weight: bold; display: block; margin-bottom: 8px; }
@@ -40,8 +40,9 @@
                 <tr>
                     <th>Medikament</th>
                     <th>PZN</th>
-                    <th>Bestand heute</th>
-                    <th>Bedarf / Tag</th>
+                    <th>Inhalt (Packung)</th>
+                    <th>Aktueller Restbestand</th>
+                    <th>Bedarf</th>
                     <th>Bestand am Wunschdatum</th>
                     <th>Reicht ab da noch...</th>
                     <th>Status</th>
@@ -56,24 +57,22 @@
     <script>
         // Feste Medikamenten-Stammdaten und Dosierungen
         const medData = [
-            { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", initStock: 100, bedarf: 3, unit: "Tabletten" },
-            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", initStock: 100, bedarf: 2, unit: "Tabletten" },
-            { id: "ozempic", name: "Ozempic 2mg (Mittwoch)", pzn: "01016397", initStock: 12, bedarf: 1/7, unit: "Wochen" },
-            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", initStock: 90, bedarf: 1, unit: "Tabletten" },
-            { id: "omeprazol", name: "Omeprazol 40 mg", pzn: "10517106", initStock: 100, bedarf: 1, unit: "Tabletten" },
-            { id: "metohexal", name: "MetoHexal 50 mg", pzn: "02559964", initStock: 100, bedarf: 1, unit: "Tabletten" },
-            { id: "metoprolol", name: "MetoProlol A-Z", pzn: "01983619", initStock: 100, bedarf: 1, unit: "Tabletten" },
-            { id: "ultibro", name: "Ultibro 85ug/43ug", pzn: "03852962", initStock: 100, bedarf: 1, unit: "Inhalationen" },
-            { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", initStock: 180, bedarf: 1, unit: "Tabletten" }
+            { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
+            { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "100 Stk.", initStock: 100, bedarf: 2 },
+            { id: "ozempic", name: "Ozempic 2mg (Mittwoch)", pzn: "01016397", packung: "12 Dosen", initStock: 12, bedarf: 1/7 },
+            { id: "pravastatin", name: "Pravastatin 20 mg", pzn: "04857714", packung: "90 Stk.", initStock: 90, bedarf: 1 },
+            { id: "omeprazol", name: "Omeprazol 40 mg", pzn: "10517106", packung: "100 Stk.", initStock: 100, bedarf: 1 },
+            { id: "metohexal", name: "MetoHexal 50 mg", pzn: "02559964", packung: "100 Stk.", initStock: 100, bedarf: 1 },
+            { id: "metoprolol", name: "MetoProlol A-Z", pzn: "01983619", packung: "100 Stk.", initStock: 100, bedarf: 1 },
+            { id: "ultibro", name: "Ultibro 85ug/43ug", pzn: "03852962", packung: "100 Inh.", initStock: 100, bedarf: 1 },
+            { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", packung: "180 Stk.", initStock: 180, bedarf: 1 }
         ];
 
-        // Beim Laden der Seite: Setze das Zukunftsdatum standardmäßig auf morgen und lade gespeicherte Bestände
         window.onload = function() {
             const morgen = new Date();
             morgen.setDate(morgen.getDate() + 1);
             document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
             
-            // Lokalen Speicher (LocalStorage) prüfen, damit geänderte Zahlen auf dem Handy gespeichert bleiben
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
@@ -89,12 +88,13 @@
             tbody.innerHTML = "";
             
             medData.forEach(med => {
-                let bedarfText = med.bedarf === 1/7 ? "1x pro Woche" : `${med.bedarf} / Tag`;
+                let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
                 
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${med.name}</strong></td>
                         <td><small>${med.pzn}</small></td>
+                        <td><small>${med.packung}</small></td>
                         <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" onchange="saveStock('${med.id}', this.value)"></td>
                         <td><small>${bedarfText}</small></td>
                         <td id="future-stock-${med.id}">-</td>
