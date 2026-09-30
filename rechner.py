@@ -1,7 +1,7 @@
 import datetime
 
 # 1. HIER GIBST DU DEINE DATEN EIN (Einfach die Zahlen/Daten anpassen):
-ZUKUNFTS_DATUM = "24.12.2026"  # Dein Wunschdatum in der Zukunft (Format: TT.MM.JJJJ)
+ZUKUNFTS_DATUM = "01.12.2026"  # Dein Wunschdatum in der Zukunft (Format: TT.MM.JJJJ)
 
 # Trage hier deinen aktuellen gezählten Bestand ein:
 BESTAND = {
