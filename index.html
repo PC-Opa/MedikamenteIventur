@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="ApoIcon.png">
     <link rel="icon" sizes="192x192" href="ApoIcon.png">
     <link rel="shortcut icon" href="ApoIcon.png">
+    <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
         h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
@@ -20,7 +21,6 @@
         th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
-        .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
         .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
@@ -54,6 +54,7 @@
     </div>
 
     <script>
+        // Die zentralen Stammdaten, die vom Server geladen werden
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "100 Stk.", initStock: 100, bedarf: 2 },
@@ -67,19 +68,28 @@
         ];
 
         window.onload = function() {
+            // Setzt das Datum standardmäßig auf morgen
             const morgen = new Date();
             morgen.setDate(morgen.getDate() + 1);
             document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
             
-            medData.forEach(med => {
-                const savedStock = localStorage.getItem('stock_' + med.id);
-                if (savedStock !== null) {
-                    med.initStock = parseInt(savedStock);
-                    if (isNaN(med.initStock)) med.initStock = 0;
-                }
-            });
-            
-            buildTable();
+            // Holt die echten, am Laptop geänderten Bestände aus der rechner.py vom GitHub-Server!
+            fetch('rechner.py?v=' + Math.random())
+                .then(res => res.text())
+                .then(codeText => {
+                    // Liest die Bestände direkt aus dem Python-Code ab
+                    medData.forEach(med => {
+                        const regex = new RegExp(`"${med.id}":\\s*(\\d+)`);
+                        const match = codeText.match(regex);
+                        if (match && match[1]) {
+                            med.initStock = parseInt(match[1]);
+                        }
+                    });
+                    buildTable();
+                })
+                .catch(() => {
+                    buildTable();
+                });
         };
 
         function buildTable() {
@@ -92,7 +102,7 @@
                         <td><strong>${med.name}</strong></td>
                         <td><small>${med.pzn}</small></td>
                         <td><strong>${med.packung}</strong></td>
-                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" min="0" oninput="updateStock('${med.id}', this.value)" onblur="checkEmpty('${med.id}', this.value)"></td>
+                        <td><strong>${med.initStock}</strong></td>
                         <td><small>${bedarfText}</small></td>
                         <td id="future-${med.id}">-</td>
                         <td id="reach-${med.id}">-</td>
@@ -101,22 +111,6 @@
                 `;
             });
             calculateInventory();
-        }
-
-        function updateStock(id, value) {
-            let num = parseInt(value);
-            if (isNaN(num) || num < 0) num = 0;
-            localStorage.setItem('stock_' + id, num);
-            const med = medData.find(m => m.id === id);
-            if (med) med.initStock = num;
-            calculateInventory();
-        }
-
-        function checkEmpty(id, value) {
-            if (value.trim() === "") {
-                document.getElementById('input-' + id).value = 0;
-                updateStock(id, 0);
-            }
         }
 
         function calculateInventory() {
