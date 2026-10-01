@@ -11,27 +11,27 @@
     <link rel="shortcut icon" href="ApoIcon.png">
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 10px; background-color: #f6f8fa; color: #24292f; font-size: 14px; }
-        h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 8px; margin-bottom: 15px; font-size: 20px; }
-        .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        label { font-weight: bold; display: block; margin-bottom: 6px; }
-        input[type="date"] { padding: 6px; font-size: 14px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; box-sizing: border-box; max-width: 200px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
+        h1 { border-bottom: 2px solid #d0d7de; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; }
+        .card { background: white; border: 1px solid #d0d7de; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        label { font-weight: bold; display: block; margin-bottom: 8px; }
+        input[type="date"] { padding: 10px; font-size: 16px; border: 1px solid #d0d7de; border-radius: 6px; width: 100%; box-sizing: border-box; max-width: 250px; }
         .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; background: white; min-width: 850px; font-size: 13px; }
-        th, td { border: 1px solid #d0d7de; padding: 6px 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; min-width: 850px; }
+        th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
-        .input-stock { width: 50px; padding: 4px; font-size: 14px; border: 1px solid #0969da; border-radius: 4px; text-align: center; font-weight: bold; }
-        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 12px; }
-        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 12px; }
-        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 12px; }
+        .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
+        .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
     </style>
 </head>
 <body>
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
-    <button class="btn-sync" style="background-color: #2da44e; color: white; border: none; padding: 8px 15px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 12px;" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle保存</button>
+    <button class="btn-sync" style="background-color: #2da44e; color: white; border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 15px;" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle speichern</button>
 
     <div class="card">
         <label for="target-date">📅 Wunschdatum in der Zukunft wählen:</label>
@@ -53,7 +53,6 @@
                 </tr>
             </thead>
             <tbody id="med-table-body">
-                <!-- Spaltengerüst komplett korrigiert: Jedes Feld sitzt am richtigen Platz -->
                 <tr><td><strong>Gabapentin Micro Labs 300 mg</strong></td><td><small>20298705</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-gabapentin" value="100" min="0" oninput="updateStock('gabapentin', this.value)"></td><td><small>3 / Tag</small></td><td id="future-gabapentin">-</td><td id="reach-gabapentin">-</td><td id="status-gabapentin">-</td></tr>
                 <tr><td><strong>Metformin Lich 1000 mg</strong></td><td><small>00488687</small></td><td><strong>180 Stk.</strong></td><td><input type="number" class="input-stock" id="input-metformin" value="100" min="0" oninput="updateStock('metformin', this.value)"></td><td><small>2 / Tag</small></td><td id="future-metformin">-</td><td id="reach-metformin">-</td><td id="status-metformin">-</td></tr>
                 <tr><td><strong>Ozempic 2mg (Mittwoch)</strong></td><td><small>01016397</small></td><td><strong>12 Dosen</strong></td><td><input type="number" class="input-stock" id="input-ozempic" value="12" min="0" oninput="updateStock('ozempic', this.value)"></td><td><small>1x wöchentlich</small></td><td id="future-ozempic">-</td><td id="reach-ozempic">-</td><td id="status-ozempic">-</td></tr>
@@ -120,3 +119,4 @@
                     newContent += "| --- | --- | --- | --- | --- |\n";
                     
                     medData.forEach(med => {
+                        let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
