@@ -55,7 +55,7 @@
     </div>
 
     <script>
-        // Deine exakten Vorgaben - Packungsinhalte komplett korrigiert!
+        // Exakt deine Werte per STRG+C eingefügt - absolut unberührt!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -73,7 +73,7 @@
             morgen.setDate(morgen.getDate() + 1);
             document.getElementById('target-date').value = morgen.toISOString().split('T');
             
-            // Liest die Restbestände fehlerfrei aus der README.md Tabelle aus
+            // Liest die geänderten Bestände synchron aus deiner README.md Tabelle aus
             fetch('README.md?v=' + Math.random())
                 .then(res => res.text())
                 .then(readmeText => {
