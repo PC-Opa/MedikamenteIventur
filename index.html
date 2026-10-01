@@ -55,7 +55,7 @@
     </div>
 
     <script>
-        // Exakt deine Werte per STRG+C eingefügt - absolut unberührt!
+        // Deine exakten Werte per STRG+C eingefügt - absolut unberührt!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -71,29 +71,45 @@
         window.onload = function() {
             const morgen = new Date();
             morgen.setDate(morgen.getDate() + 1);
-            document.getElementById('target-date').value = morgen.toISOString().split('T');
+            document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
             
-            // Liest die geänderten Bestände synchron aus deiner README.md Tabelle aus
-            fetch('README.md?v=' + Math.random())
-                .then(res => res.text())
-                .then(readmeText => {
-                    medData.forEach(med => {
-                        const lines = readmeText.split('\n');
-                        for (let line of lines) {
-                            if (line.includes(med.pzn)) {
-                                const parts = line.split('|');
-                                if (parts.length >= 5) {
-                                    const stockValue = parseInt(parts[4].trim());
-                                    if (!isNaN(stockValue)) med.initStock = stockValue;
+            // Erst prüfen, ob im Handy schon eigene Bestände gespeichert sind
+            lethasSaved = false;
+            medData.forEach(med => {
+                const savedStock = localStorage.getItem('stock_' + med.id);
+                if (savedStock !== null) {
+                    med.initStock = parseInt(savedStock);
+                    if (isNaN(med.initStock)) med.initStock = 0;
+                    hasSaved = true;
+                }
+            });
+
+            // Nur wenn NOCH GAR NICHTS gespeichert ist, laden wir die Startwerte aus GitHub
+            if (!hasSaved) {
+                fetch('README.md?v=' + Math.random())
+                    .then(res => res.text())
+                    .then(readmeText => {
+                        medData.forEach(med => {
+                            const lines = readmeText.split('\n');
+                            for (let line of lines) {
+                                if (line.includes(med.pzn)) {
+                                    const parts = line.split('|');
+                                    if (parts.length >= 5) {
+                                        const stockValue = parseInt(parts[4].trim());
+                                        if (!isNaN(stockValue)) {
+                                            med.initStock = stockValue;
+                                            localStorage.setItem('stock_' + med.id, stockValue);
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    });
-                    buildTable();
-                })
-                .catch(() => {
-                    buildTable();
-                });
+                        });
+                        buildTable();
+                    })
+                    .catch(() => { buildTable(); });
+            } else {
+                buildTable();
+            }
         };
 
         function buildTable() {
@@ -121,7 +137,10 @@
             let num = parseInt(value);
             if (isNaN(num) || num < 0) num = 0;
             const med = medData.find(m => m.id === id);
-            if (med) med.initStock = num;
+            if (med) {
+                med.initStock = num;
+                localStorage.setItem('stock_' + id, num); // Speichert die Zahl bombenfest auf dem Gerät!
+            }
             calculateInventory();
         }
 
@@ -169,11 +188,3 @@
                     else statusHtml = '<span class="status-green">🟢 Sicher</span>';
                 }
 
-                document.getElementById(`future-${med.id}`).innerText = zukunftsBestand;
-                document.getElementById(`reach-${med.id}`).innerHTML = `<strong>${reichweiteText}</strong>`;
-                document.getElementById(`status-${med.id}`).innerHTML = statusHtml;
-            });
-        }
-    </script>
-</body>
-</html>
