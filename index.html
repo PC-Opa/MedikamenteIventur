@@ -20,8 +20,7 @@
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
     </style>
-    <!-- Das wichtige Hilfsprogramm für die Tabelle direkt im Kopf geladen -->
-    <script src="https://jsdelivr.net"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
@@ -33,11 +32,13 @@
 
     <script>
         window.onload = function() {
-            // Holt die Tabelle direkt von GitHub
-            fetch('https://githubusercontent.com')
-                .then(response => response.text())
+            // Holt die Datei direkt aus dem gleichen Verzeichnis (Verhindert CORS-Sperren)
+            fetch('README.md?v=' + String(new Date().getTime()))
+                .then(response => {
+                    if (!response.ok) throw new Error('Netzwerk-Fehler');
+                    return response.text();
+                })
                 .then(text => {
-                    // Schreibt die fertige Tabelle auf den Bildschirm
                     document.getElementById('content-area').innerHTML = marked.parse(text);
                 })
                 .catch(err => {
