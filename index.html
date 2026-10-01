@@ -21,6 +21,7 @@
         th, td { border: 1px solid #d0d7de; padding: 12px; text-align: left; }
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
+        .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
         .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
@@ -54,7 +55,7 @@
     </div>
 
     <script>
-        // Die zentralen Stammdaten, die vom Server geladen werden
+        // Deine exakten Vorgaben - Packungsinhalte komplett korrigiert!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -68,21 +69,24 @@
         ];
 
         window.onload = function() {
-            // Setzt das Datum standardmäßig auf morgen
             const morgen = new Date();
             morgen.setDate(morgen.getDate() + 1);
-            document.getElementById('target-date').value = morgen.toISOString().split('T')[0];
+            document.getElementById('target-date').value = morgen.toISOString().split('T');
             
-            // Holt die echten, am Laptop geänderten Bestände aus der rechner.py vom GitHub-Server!
-            fetch('rechner.py?v=' + Math.random())
+            // Liest die Restbestände fehlerfrei aus der README.md Tabelle aus
+            fetch('README.md?v=' + Math.random())
                 .then(res => res.text())
-                .then(codeText => {
-                    // Liest die Bestände direkt aus dem Python-Code ab
+                .then(readmeText => {
                     medData.forEach(med => {
-                        const regex = new RegExp(`"${med.id}":\\s*(\\d+)`);
-                        const match = codeText.match(regex);
-                        if (match && match[1]) {
-                            med.initStock = parseInt(match[1]);
+                        const lines = readmeText.split('\n');
+                        for (let line of lines) {
+                            if (line.includes(med.pzn)) {
+                                const parts = line.split('|');
+                                if (parts.length >= 5) {
+                                    const stockValue = parseInt(parts[4].trim());
+                                    if (!isNaN(stockValue)) med.initStock = stockValue;
+                                }
+                            }
                         }
                     });
                     buildTable();
@@ -102,7 +106,7 @@
                         <td><strong>${med.name}</strong></td>
                         <td><small>${med.pzn}</small></td>
                         <td><strong>${med.packung}</strong></td>
-                        <td><strong>${med.initStock}</strong></td>
+                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" min="0" oninput="updateStock('${med.id}', this.value)" onblur="checkEmpty('${med.id}', this.value)"></td>
                         <td><small>${bedarfText}</small></td>
                         <td id="future-${med.id}">-</td>
                         <td id="reach-${med.id}">-</td>
@@ -111,6 +115,21 @@
                 `;
             });
             calculateInventory();
+        }
+
+        function updateStock(id, value) {
+            let num = parseInt(value);
+            if (isNaN(num) || num < 0) num = 0;
+            const med = medData.find(m => m.id === id);
+            if (med) med.initStock = num;
+            calculateInventory();
+        }
+
+        function checkEmpty(id, value) {
+            if (value.trim() === "") {
+                document.getElementById('input-' + id).value = 0;
+                updateStock(id, 0);
+            }
         }
 
         function calculateInventory() {
