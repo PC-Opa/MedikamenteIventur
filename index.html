@@ -33,7 +33,7 @@
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
-    <!-- Der neue manuelle Synchronisations-Button -->
+    <!-- Dein neuer, manueller Knopf zum Senden der Daten -->
     <button class="btn-sync" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle speichern</button>
 
     <div class="card">
@@ -60,6 +60,7 @@
     </div>
 
     <script>
+        // Deine exakten Vorgaben und Werte – absolut unberührt!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -72,39 +73,21 @@
             { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", packung: "100 Stk.", initStock: 180, bedarf: 1 }
         ];
 
-        let fileSha = ""; // Wird benötigt, um die Datei auf GitHub zu überschreiben
-
         window.onload = function() {
+            // Zwingt das Datum beim Laden immer stabil auf den 01.01.2027!
             document.getElementById('target-date').value = "2027-01-01";
-            loadFromGitHub();
+            
+            // Lädt die echten Zahlen aus dem sicheren Speicher des Geräts
+            medData.forEach(med => {
+                const savedStock = localStorage.getItem('stock_' + med.id);
+                if (savedStock !== null) {
+                    med.initStock = parseInt(savedStock);
+                    if (isNaN(med.initStock)) med.initStock = 0;
+                }
+            });
+            
+            buildTable();
         };
-
-        // Holt die echten Zahlen aus der README.md Tabelle von GitHub ab
-        function loadFromGitHub() {
-            fetch('https://github.com' + Math.random())
-                .then(res => res.json())
-                .then(data => {
-                    fileSha = data.sha; // Speichert die aktuelle Datei-ID
-                    const readmeText = atob(data.content); // Entschlüsselt den GitHub-Text
-                    
-                    medData.forEach(med => {
-                        const lines = readmeText.split('\n');
-                        for (let line of lines) {
-                            if (line.includes(med.pzn)) {
-                                const parts = line.split('|');
-                                if (parts.length >= 5) {
-                                    const stockValue = parseInt(parts[4].trim());
-                                    if (!isNaN(stockValue)) med.initStock = stockValue;
-                                }
-                            }
-                        }
-                    });
-                    buildTable();
-                })
-                .catch(() => {
-                    buildTable();
-                });
-        }
 
         function buildTable() {
             const tbody = document.getElementById('med-table-body');
@@ -131,7 +114,10 @@
             let num = parseInt(value);
             if (isNaN(num) || num < 0) num = 0;
             const med = medData.find(m => m.id === id);
-            if (med) med.initStock = num;
+            if (med) {
+                med.initStock = num;
+                localStorage.setItem('stock_' + id, num); // Speichert es sofort auf dem Gerät
+            }
             calculateInventory();
         }
 
@@ -142,51 +128,63 @@
             }
         }
 
-        // Schreibt die geänderten Zahlen per Knopfdruck direkt zurück in die README.md Datei auf GitHub!
+        // Schreibt deine Zahlen auf Knopfdruck direkt in das GitHub-Logbuch (README.md) zurück
         function syncWithGitHub() {
             const btn = document.querySelector('.btn-sync');
             btn.innerText = "⏳ Speichere in GitHub...";
             btn.style.backgroundColor = "#e16f24";
 
-            // Verschlüsseltes Hilfspasswort (wird im Browser zusammengesetzt)
             const p1 = "ghp_L0l7uN3";
             const p2 = "YVmqH4M4R8";
             const p3 = "d4rF07rD4Oa082Qz2rE"; 
             const token = p1 + p2 + p3;
 
-            // Baut die neue Texttabelle für die README.md zusammen
-            let newContent = "# 📋 Mein Medikamenten-Inventar\n\n";
-            newContent += "| Medikament | PZN | Inhalt | Aktueller Restbestand | Bedarf |\n";
-            newContent += "| --- | --- | --- | --- | --- |\n";
-            
-            medData.forEach(med => {
-                let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
-                newContent += `| ${med.name} | ${med.pzn} | ${med.packung} | ${med.initStock} | ${bedarfText} |\n`;
-            });
+            // Holt zuerst die aktuelle Datei-ID von GitHub, um Fehler zu vermeiden
+            fetch('https://github.com')
+                .then(res => res.json())
+                .then(fileData => {
+                    let newContent = "# 📋 Mein Medikamenten-Inventar\n\n";
+                    newContent += "| Medikament | PZN | Inhalt | Aktueller Restbestand | Bedarf |\n";
+                    newContent += "| --- | --- | --- | --- | --- |\n";
+                    
+                    medData.forEach(med => {
+                        let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
+                        newContent += `| ${med.name} | ${med.pzn} | ${med.packung} | ${med.initStock} | ${bedarfText} |\n`;
+                    });
 
-            // Sendet die Daten direkt an die GitHub-Schnittstelle
-            fetch('https://github.com', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'token ' + token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: "Synchronisation von App",
-                    content: btoa(unescape(encodeURIComponent(newContent))),
-                    sha: fileSha
+                    // Sendet die Tabelle an dein GitHub
+                    return fetch('https://github.com', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': 'token ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: "Synchronisation von App",
+                            content: btoa(unescape(encodeURIComponent(newContent))),
+                            sha: fileData.sha
+                        })
+                    });
                 })
-            })
-            .then(res => {
-                if(res.ok) {
-                    btn.innerText = "✅ Erfolgreich synchronisiert!";
-                    btn.style.backgroundColor = "#2da44e";
-                    setTimeout(loadFromGitHub, 2000);
-                } else {
-                    throw new Error();
-                }
-            })
-            .catch(() => {
-                btn.innerText = "❌ Fehler beim Speichern";
-                btn.style.backgroundColor = "#cf222e";
-                setTimeout(() => {
+                .then(res => {
+                    if(res.ok) {
+                        btn.innerText = "✅ Erfolgreich synchronisiert!";
+                        btn.style.backgroundColor = "#2da44e";
+                        setTimeout(() => { btn.innerHTML = "🔄 Änderungen in GitHub-Tabelle speichern"; }, 3000);
+                    } else {
+                        throw new Error();
+                    }
+                })
+                .catch(() => {
+                    btn.innerText = "❌ Fehler beim Speichern";
+                    btn.style.backgroundColor = "#cf222e";
+                    setTimeout(() => {
+                        btn.innerHTML = "🔄 Änderungen in GitHub-Tabelle speichern";
+                        btn.style.backgroundColor = "#2da44e";
+                    }, 3000);
+                });
+        }
+
+        function calculateInventory() {
+            const heute = new Date();
+            heute.setHours(0,0,0,0);
