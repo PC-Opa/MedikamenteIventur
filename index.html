@@ -81,7 +81,7 @@
         ];
 
         window.onload = function() {
-            // HIER WURDE ES GEÄNDERT: Zieht sich vollautomatisch das heutige Datum (=HEUTE())
+            // HIER WURDE ES KORRIGIERT: Kalender startet ab jetzt immer mit HEUTE
             const heute = new Date();
             const jahr = heute.getFullYear();
             const monat = String(heute.getMonth() + 1).padStart(2, '0');
@@ -110,6 +110,13 @@
             calculateInventory();
         }
 
+        function checkEmpty(id, value) {
+            if (value.trim() === "") {
+                document.getElementById('input-' + id).value = 0;
+                updateStock(id, 0);
+            }
+        }
+
         function syncWithGitHub() {
             const btn = document.querySelector('.btn-sync');
             btn.innerText = "⏳ Speichere in GitHub...";
@@ -120,6 +127,3 @@
             const p3 = "d4rF07rD4Oa082Qz2rE"; 
             const token = p1 + p2 + p3;
 
-            fetch('https://github.com')
-                .then(res => res.json())
-                .then(fileData => {
