@@ -80,15 +80,17 @@
             { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", packung: "100 Stk.", initStock: 180, bedarf: 1 }
         ];
 
-        window.onload = function() {
-            // HIER WURDE ES KORRIGIERT: Kalender startet ab jetzt immer mit HEUTE
-            const heute = new Date();
-            const jahr = heute.getFullYear();
-            const monat = String(heute.getMonth() + 1).padStart(2, '0');
-            const tag = String(heute.getDate()).padStart(2, '0');
-            document.getElementById('target-date').value = `${jahr}-${monat}-${tag}`;
+        function initializeApp() {
+            // Holt sich vollautomatisch das heutige Datum (03.10.2026) als Startwert
+            const dateField = document.getElementById('target-date');
+            if (dateField) {
+                const heute = new Date();
+                const jahr = heute.getFullYear();
+                const monat = String(heute.getMonth() + 1).padStart(2, '0');
+                const tag = String(heute.getDate()).padStart(2, '0');
+                dateField.value = `${jahr}-${monat}-${tag}`;
+            }
             
-            // Gespeicherte Daten laden, falls vorhanden
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
@@ -98,7 +100,13 @@
                 }
             });
             calculateInventory();
-        };
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initializeApp);
+        } else {
+            initializeApp();
+        }
 
         function updateStock(id, value) {
             let num = parseInt(value) || 0;
@@ -120,10 +128,3 @@
         function syncWithGitHub() {
             const btn = document.querySelector('.btn-sync');
             btn.innerText = "⏳ Speichere in GitHub...";
-            btn.style.backgroundColor = "#e16f24";
-
-            const p1 = "ghp_L0l7uN3";
-            const p2 = "YVmqH4M4R8";
-            const p3 = "d4rF07rD4Oa082Qz2rE"; 
-            const token = p1 + p2 + p3;
-
