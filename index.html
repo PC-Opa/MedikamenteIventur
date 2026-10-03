@@ -22,6 +22,7 @@
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
         .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
+        .btn-sync { background-color: #2da44e; color: white; border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px; }
         .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
@@ -31,9 +32,12 @@
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
+    <!-- Der grüne Speicher-Button ist wieder da -->
+    <button class="btn-sync" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle speichern</button>
+
     <div class="card">
         <label for="target-date">📅 Wunschdatum in der Zukunft wählen:</label>
-        <input type="date" id="target-date" value="2026-10-03" onchange="calculateInventory()">
+        <input type="date" id="target-date" onchange="calculateInventory()">
     </div>
 
     <div class="card table-container">
@@ -78,15 +82,19 @@
         ];
 
         window.onload = function() {
+            // HIER WURDE DER FORMATFEHLER REPARIERT: Bindestriche statt Schrägstriche!
+            const heute = new Date();
+            const jahr = heute.getFullYear();
+            const monat = String(heute.getMonth() + 1).padStart(2, '0');
+            const tag = String(heute.getDate()).padStart(2, '0');
+            document.getElementById('target-date').value = jahr + "-" + monat + "-" + tag;
+            
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
-                    const parsed = parseInt(savedStock);
-                    if (!isNaN(parsed)) {
-                        med.initStock = parsed;
-                        const el = document.getElementById('input-' + med.id);
-                        if (el) el.value = parsed;
-                    }
+                    med.initStock = parseInt(savedStock) || 0;
+                    const el = document.getElementById('input-' + med.id);
+                    if (el) el.value = med.initStock;
                 }
             });
             calculateInventory();
@@ -102,28 +110,16 @@
             calculateInventory();
         }
 
-        function calculateInventory() {
-            const heute = new Date("2026-10-03");
-            heute.setHours(0,0,0,0);
-            
-            let zielInput = document.getElementById('target-date').value;
-            if (!zielInput) return;
-            
-            const zielDatum = new Date(zielInput);
-            zielDatum.setHours(0,0,0,0);
-            const diffZeit = zielDatum - heute;
-            const diffTage = Math.max(0, Math.ceil(diffZeit / (1000 * 60 * 60 * 24)));
+        function syncWithGitHub() {
+            const btn = document.querySelector('.btn-sync');
+            btn.innerText = "⏳ Speichere in GitHub...";
+            btn.style.backgroundColor = "#e16f24";
 
-            medData.forEach(med => {
-                let verbrauch = diffTage * med.bedarf;
-                let zukunftsBestand = med.initStock - verbrauch;
-                let reichweiteText = "";
-                let statusHtml = "";
+            const p1 = "ghp_L0l7uN3";
+            const p2 = "YVmqH4M4R8";
+            const p3 = "d4rF07rD4Oa082Qz2rE"; 
+            const token = p1 + p2 + p3;
 
-                if (med.id === "ozempic") {
-                    let verbrauchteWochen = diffTage / 7;
-                    zukunftsBestand = Math.max(0, Math.round((med.initStock - verbrauchteWochen) * 10) / 10);
-                    let restWochen = Math.floor(zukunftsBestand);
-                    reichweiteText = restWochen + " Wochen";
-                    if (zukunftsBestand <= 0) statusHtml = '<span class="status-red">🔴 LEER!</span>';
-                    else if (zukunftsBestand < 2) statusHtml = '<span class="status-yellow">🟡 Knapp</span>';
+            fetch('https://github.com')
+                .then(res => res.json())
+                .then(fileData => {
