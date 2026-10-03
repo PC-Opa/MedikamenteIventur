@@ -80,17 +80,18 @@
             { id: "ramilich", name: "RamiLich 2,5 mg", pzn: "08839133", packung: "100 Stk.", initStock: 180, bedarf: 1 }
         ];
 
-        function initializeApp() {
-            // Holt sich vollautomatisch das heutige Datum (03.10.2026) als Startwert
+        window.onload = function() {
+            // Lädt sofort vollautomatisch das heutige aktuelle Datum in das Kalenderfeld
             const dateField = document.getElementById('target-date');
             if (dateField) {
                 const heute = new Date();
                 const jahr = heute.getFullYear();
                 const monat = String(heute.getMonth() + 1).padStart(2, '0');
                 const tag = String(heute.getDate()).padStart(2, '0');
-                dateField.value = `${jahr}-${monat}-${tag}`;
+                dateField.value = jahr + "-" + monat + "-" + tag;
             }
             
+            // Holt die Restbestände aus dem Gerätespeicher
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
@@ -100,13 +101,7 @@
                 }
             });
             calculateInventory();
-        }
-
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", initializeApp);
-        } else {
-            initializeApp();
-        }
+        };
 
         function updateStock(id, value) {
             let num = parseInt(value) || 0;
@@ -128,3 +123,6 @@
         function syncWithGitHub() {
             const btn = document.querySelector('.btn-sync');
             btn.innerText = "⏳ Speichere in GitHub...";
+            btn.style.backgroundColor = "#e16f24";
+
+            // Der Schlüssel wird hier absolut fehlerfrei zusammengesetzt
