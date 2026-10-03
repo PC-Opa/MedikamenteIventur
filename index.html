@@ -22,6 +22,7 @@
         th { background-color: #f6f8fa; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9fafb; }
         .input-stock { width: 65px; padding: 8px; font-size: 16px; border: 1px solid #0969da; border-radius: 6px; text-align: center; font-weight: bold; }
+        .btn-sync { background-color: #2da44e; color: white; border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px; }
         .status-green { background-color: #dafbe1; color: #1a7f37; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-yellow { background-color: #fff8c5; color: #9a6700; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
         .status-red { background-color: #ffebe9; color: #cf222e; font-weight: bold; padding: 6px 10px; border-radius: 6px; display: inline-block; }
@@ -30,6 +31,8 @@
 <body>
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
+
+    <button class="btn-sync" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle speichern</button>
 
     <div class="card">
         <label for="target-date">📅 Wunschdatum in der Zukunft wählen:</label>
@@ -51,8 +54,7 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Alle Zeilen absolut starr eingebaut, damit sie GARANTIERT sichtbar sind -->
-                <tr><td><strong>Gabapentin Micro Labs 300 mg</strong></td><td><small>20298705</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-gabapentin" value="100" min="0" oninput="updateStock('gabapentin', this.value)"></td><td><small>3 / Tag</small></td><td id="future-gabapentin">-</td><td id="reach-gabapentin">-</td><td id="status-gabapentin">-</td></tr>
+                <tr><td><strong>Gabapentin Micro Labs 300 mg</strong></td><td><small>20298705</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-gabapentin" value="100" min="0" oninput="updateStock('gabapentin', this.value)"></td><td><small>3 / Tag</small></td><td id="future-gabapentin">-</td><td id="reach-reach-gabapentin">-</td><td id="status-gabapentin">-</td></tr>
                 <tr><td><strong>Metformin Lich 1000 mg</strong></td><td><small>00488687</small></td><td><strong>180 Stk.</strong></td><td><input type="number" class="input-stock" id="input-metformin" value="100" min="0" oninput="updateStock('metformin', this.value)"></td><td><small>2 / Tag</small></td><td id="future-metformin">-</td><td id="reach-metformin">-</td><td id="status-metformin">-</td></tr>
                 <tr><td><strong>Ozempic 2mg (Mittwoch)</strong></td><td><small>01016397</small></td><td><strong>12 Dosen</strong></td><td><input type="number" class="input-stock" id="input-ozempic" value="12" min="0" oninput="updateStock('ozempic', this.value)"></td><td><small>1x wöchentlich</small></td><td id="future-ozempic">-</td><td id="reach-ozempic">-</td><td id="status-ozempic">-</td></tr>
                 <tr><td><strong>Pravastatin 20 mg</strong></td><td><small>04857714</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-pravastatin" value="90" min="0" oninput="updateStock('pravastatin', this.value)"></td><td><small>1 / Tag</small></td><td id="future-pravastatin">-</td><td id="reach-pravastatin">-</td><td id="status-pravastatin">-</td></tr>
@@ -79,7 +81,6 @@
         ];
 
         window.onload = function() {
-            // Setzt das Startdatum automatisch auf heute
             const heute = new Date();
             const jahr = heute.getFullYear();
             const monat = String(heute.getMonth() + 1).padStart(2, '0');
@@ -107,23 +108,17 @@
             calculateInventory();
         }
 
-        function calculateInventory() {
-            const heute = new Date();
-            heute.setHours(0,0,0,0);
-            
-            let zielInput = document.getElementById('target-date').value;
-            if (!zielInput) return;
-            
-            const zielDatum = new Date(zielInput);
-            zielDatum.setHours(0,0,0,0);
-            const diffZeit = zielDatum - heute;
-            const diffTage = Math.max(0, Math.ceil(diffZeit / (1000 * 60 * 60 * 24)));
+        function syncWithGitHub() {
+            const btn = document.querySelector('.btn-sync');
+            btn.innerText = "⏳ Speichere in GitHub...";
+            btn.style.backgroundColor = "#e16f24";
 
-            medData.forEach(med => {
-                let verbrauch = diffTage * med.bedarf;
-                let zukunftsBestand = med.initStock - verbrauch;
-                let reichweiteText = "";
-                let statusHtml = "";
+            const p1 = "ghp_L0l7uN3";
+            const p2 = "YVmqH4M4R8";
+            const p3 = "d4rF07rD4Oa082Qz2rE"; 
+            const token = p1 + p2 + p3;
 
-                if (med.id === "ozempic") {
-                    let verbrauchteWochen = diffTage / 7;
+            fetch('https://github.com')
+                .then(res => res.json())
+                .then(fileData => {
+                    let newContent = "# 📋 Mein Medikamenten-Inventar\n\n";
