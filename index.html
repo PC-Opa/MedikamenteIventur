@@ -58,7 +58,7 @@
     </div>
 
     <script>
-        // Deine exakten Vorgaben und Werte per STRG+C eingefügt
+        // Deine exakten Vorgaben und Werte per STRG+C - absolut unberührt!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -72,10 +72,9 @@
         ];
 
         window.onload = function() {
-            // Setzt das Wunschdatum standardmäßig auf den 01.01.2027
+            // Zwingt das Start-Wunschdatum felsenfest auf den 01.01.2027
             document.getElementById('target-date').value = "2027-01-01";
             
-            // Lädt die geänderten Zahlen aus dem sicheren Speicher des Handys/Laptops
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
@@ -131,13 +130,12 @@
             btn.innerText = "⏳ Speichere in GitHub...";
             btn.style.backgroundColor = "#e16f24";
 
-            // Verschlüsseltes Hilfspasswort für die Schnittstelle
             const p1 = "ghp_L0l7uN3";
             const p2 = "YVmqH4M4R8";
             const p3 = "d4rF07rD4Oa082Qz2rE"; 
             const token = p1 + p2 + p3;
 
-            // Holt zuerst die aktuelle ID von GitHub, um Schreibfehler auszuschließen
+            // Holt die korrekte Datei-ID direkt von GitHub ab
             fetch('https://github.com')
                 .then(res => res.json())
                 .then(fileData => {
@@ -189,3 +187,6 @@
                 zielInput = "2027-01-01";
             }
             
+            const zielDatum = new Date(zielInput);
+            zielDatum.setHours(0,0,0,0);
+            const diffZeit = zielDatum - heute;
