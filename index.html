@@ -53,12 +53,21 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="med-table-body"></tbody>
+            <tbody>
+                <tr><td><strong>Gabapentin Micro Labs 300 mg</strong></td><td><small>20298705</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-gabapentin" value="100" min="0" oninput="updateStock('gabapentin', this.value)"></td><td><small>3 / Tag</small></td><td id="future-gabapentin">-</td><td id="reach-gabapentin">-</td><td id="status-gabapentin">-</td></tr>
+                <tr><td><strong>Metformin Lich 1000 mg</strong></td><td><small>00488687</small></td><td><strong>180 Stk.</strong></td><td><input type="number" class="input-stock" id="input-metformin" value="100" min="0" oninput="updateStock('metformin', this.value)"></td><td><small>2 / Tag</small></td><td id="future-metformin">-</td><td id="reach-metformin">-</td><td id="status-metformin">-</td></tr>
+                <tr><td><strong>Ozempic 2mg (Mittwoch)</strong></td><td><small>01016397</small></td><td><strong>12 Dosen</strong></td><td><input type="number" class="input-stock" id="input-ozempic" value="12" min="0" oninput="updateStock('ozempic', this.value)"></td><td><small>1x wöchentlich</small></td><td id="future-ozempic">-</td><td id="reach-ozempic">-</td><td id="status-ozempic">-</td></tr>
+                <tr><td><strong>Pravastatin 20 mg</strong></td><td><small>04857714</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-pravastatin" value="90" min="0" oninput="updateStock('pravastatin', this.value)"></td><td><small>1 / Tag</small></td><td id="future-pravastatin">-</td><td id="reach-pravastatin">-</td><td id="status-pravastatin">-</td></tr>
+                <tr><td><strong>Omeprazol 40 mg</strong></td><td><small>10517106</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-omeprazol" value="100" min="0" oninput="updateStock('omeprazol', this.value)"></td><td><small>1 / Tag</small></td><td id="future-omeprazol">-</td><td id="reach-omeprazol">-</td><td id="status-omeprazol">-</td></tr>
+                <tr><td><strong>MetoHexal 50 mg</strong></td><td><small>02559964</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-metohexal" value="100" min="0" oninput="updateStock('metohexal', this.value)"></td><td><small>1 / Tag</small></td><td id="future-metohexal">-</td><td id="reach-metohexal">-</td><td id="status-metohexal">-</td></tr>
+                <tr><td><strong>MetoProlol A-Z</strong></td><td><small>01983619</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-metoprolol" value="100" min="0" oninput="updateStock('metoprolol', this.value)"></td><td><small>1 / Tag</small></td><td id="future-metoprolol">-</td><td id="reach-metoprolol">-</td><td id="status-metoprolol">-</td></tr>
+                <tr><td><strong>Ultibro 85ug/43ug</strong></td><td><small>03852962</small></td><td><strong>100 Inh.</strong></td><td><input type="number" class="input-stock" id="input-ultibro" value="100" min="0" oninput="updateStock('ultibro', this.value)"></td><td><small>1 / Tag</small></td><td id="future-ultibro">-</td><td id="reach-ultibro">-</td><td id="status-ultibro">-</td></tr>
+                <tr><td><strong>RamiLich 2,5 mg</strong></td><td><small>08839133</small></td><td><strong>100 Stk.</strong></td><td><input type="number" class="input-stock" id="input-ramilich" value="180" min="0" oninput="updateStock('ramilich', this.value)"></td><td><small>1 / Tag</small></td><td id="future-ramilich">-</td><td id="reach-ramilich">-</td><td id="status-ramilich">-</td></tr>
+            </tbody>
         </table>
     </div>
 
     <script>
-        // Deine exakten Vorgaben und Werte per STRG+C - absolut unberührt!
         const medData = [
             { id: "gabapentin", name: "Gabapentin Micro Labs 300 mg", pzn: "20298705", packung: "100 Stk.", initStock: 100, bedarf: 3 },
             { id: "metformin", name: "Metformin Lich 1000 mg", pzn: "00488687", packung: "180 Stk.", initStock: 100, bedarf: 2 },
@@ -72,57 +81,33 @@
         ];
 
         window.onload = function() {
-            // Zwingt das Start-Wunschdatum felsenfest auf den 01.01.2027
-            document.getElementById('target-date').value = "2027-01-01";
+            // HIER WURDE ES GEÄNDERT: Zieht sich vollautomatisch das heutige Datum (=HEUTE())
+            const heute = new Date();
+            const jahr = heute.getFullYear();
+            const monat = String(heute.getMonth() + 1).padStart(2, '0');
+            const tag = String(heute.getDate()).padStart(2, '0');
+            document.getElementById('target-date').value = `${jahr}-${monat}-${tag}`;
             
+            // Gespeicherte Daten laden, falls vorhanden
             medData.forEach(med => {
                 const savedStock = localStorage.getItem('stock_' + med.id);
                 if (savedStock !== null) {
-                    med.initStock = parseInt(savedStock);
-                    if (isNaN(med.initStock)) med.initStock = 0;
+                    med.initStock = parseInt(savedStock) || 0;
+                    const el = document.getElementById('input-' + med.id);
+                    if (el) el.value = med.initStock;
                 }
             });
-            
-            buildTable();
+            calculateInventory();
         };
 
-        function buildTable() {
-            const tbody = document.getElementById('med-table-body');
-            tbody.innerHTML = "";
-            medData.forEach(med => {
-                let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${med.name}</strong></td>
-                        <td><small>${med.pzn}</small></td>
-                        <td><strong>${med.packung}</strong></td>
-                        <td><input type="number" class="input-stock" id="input-${med.id}" value="${med.initStock}" min="0" oninput="updateStock('${med.id}', this.value)" onblur="checkEmpty('${med.id}', this.value)"></td>
-                        <td><small>${bedarfText}</small></td>
-                        <td id="future-${med.id}">-</td>
-                        <td id="reach-${med.id}">-</td>
-                        <td id="status-${med.id}">-</td>
-                    </tr>
-                `;
-            });
-            calculateInventory();
-        }
-
         function updateStock(id, value) {
-            let num = parseInt(value);
-            if (isNaN(num) || num < 0) num = 0;
+            let num = parseInt(value) || 0;
             const med = medData.find(m => m.id === id);
             if (med) {
                 med.initStock = num;
                 localStorage.setItem('stock_' + id, num);
             }
             calculateInventory();
-        }
-
-        function checkEmpty(id, value) {
-            if (value.trim() === "") {
-                document.getElementById('input-' + id).value = 0;
-                updateStock(id, 0);
-            }
         }
 
         function syncWithGitHub() {
@@ -135,58 +120,6 @@
             const p3 = "d4rF07rD4Oa082Qz2rE"; 
             const token = p1 + p2 + p3;
 
-            // Holt die korrekte Datei-ID direkt von GitHub ab
             fetch('https://github.com')
                 .then(res => res.json())
                 .then(fileData => {
-                    let newContent = "# 📋 Mein Medikamenten-Inventar\n\n";
-                    newContent += "| Medikament | PZN | Inhalt | Aktueller Restbestand | Bedarf |\n";
-                    newContent += "| --- | --- | --- | --- | --- |\n";
-                    
-                    medData.forEach(med => {
-                        let bedarfText = med.bedarf === 1/7 ? "1x wöchentlich" : `${med.bedarf} / Tag`;
-                        newContent += `| ${med.name} | ${med.pzn} | ${med.packung} | ${med.initStock} | ${bedarfText} |\n`;
-                    });
-
-                    return fetch('https://github.com', {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': 'token ' + token,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: "Synchronisation von App",
-                            content: btoa(unescape(encodeURIComponent(newContent))),
-                            sha: fileData.sha
-                        })
-                    });
-                })
-                .then(res => {
-                    if(res.ok) {
-                        btn.innerText = "✅ Erfolgreich synchronisiert!";
-                        btn.style.backgroundColor = "#2da44e";
-                        setTimeout(() => { btn.innerHTML = "🔄 Änderungen in GitHub-Tabelle speichern"; }, 3000);
-                    } else { throw new Error(); }
-                })
-                .catch(() => {
-                    btn.innerText = "❌ Fehler beim Speichern";
-                    btn.style.backgroundColor = "#cf222e";
-                    setTimeout(() => {
-                        btn.innerHTML = "🔄 Änderungen in GitHub-Tabelle speichern";
-                        btn.style.backgroundColor = "#2da44e";
-                    }, 3000);
-                });
-        }
-
-        function calculateInventory() {
-            const heute = new Date();
-            heute.setHours(0,0,0,0);
-            let zielInput = document.getElementById('target-date').value;
-            if (!zielInput) {
-                document.getElementById('target-date').value = "2027-01-01";
-                zielInput = "2027-01-01";
-            }
-            
-            const zielDatum = new Date(zielInput);
-            zielDatum.setHours(0,0,0,0);
-            const diffZeit = zielDatum - heute;
