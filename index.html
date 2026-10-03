@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Medikamenten-Inventar</title>
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" type="image/png" href="ApoIcon.png">
-    <link rel="apple-touch-icon" href="ApoIcon.png">
-    <link rel="icon" sizes="192x192" href="ApoIcon.png">
-    <link rel="shortcut icon" href="ApoIcon.png">
+    <link rel="icon" type="image/png" href="Apolcon.png">
+    <link rel="apple-touch-icon" href="Apolcon.png">
+    <link rel="icon" sizes="192x192" href="Apolcon.png">
+    <link rel="shortcut icon" href="Apolcon.png">
     <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 15px; background-color: #f6f8fa; color: #24292f; }
@@ -32,7 +32,6 @@
 
     <h1>📋 Mein Medikamenten-Inventar</h1>
 
-    <!-- Der grüne Speicher-Button ist wieder da -->
     <button class="btn-sync" onclick="syncWithGitHub()">🔄 Änderungen in GitHub-Tabelle speichern</button>
 
     <div class="card">
@@ -82,7 +81,6 @@
         ];
 
         window.onload = function() {
-            // HIER WURDE DER FORMATFEHLER REPARIERT: Bindestriche statt Schrägstriche!
             const heute = new Date();
             const jahr = heute.getFullYear();
             const monat = String(heute.getMonth() + 1).padStart(2, '0');
@@ -123,3 +121,5 @@
             fetch('https://github.com')
                 .then(res => res.json())
                 .then(fileData => {
+                    let newContent = "# 📋 Mein Medikamenten-Inventar\n\n";
+                    newContent += "| Medikament | PZN | Inhalt | Aktueller Restbestand | Bedarf |\n";
